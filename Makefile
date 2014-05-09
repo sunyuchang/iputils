@@ -122,10 +122,10 @@ ifneq ($(ENABLE_RDISC_SERVER),no)
 endif
 
 # ENABLE_PING6_RTHDR: DEF_ENABLE_PING6_RTHDR
-ifneq ($(ENABLE_PING6_RTHDR),no)
-	DEF_ENABLE_PING6_RTHDR = -DPING6_ENABLE_RTHDR
-ifeq ($(ENABLE_PING6_RTHDR),RFC3542)
-	DEF_ENABLE_PING6_RTHDR += -DPINR6_ENABLE_RTHDR_RFC3542
+ifneq ($(ENABLE_PING6_RTHDR),no)        	#判断ENABLE_PING6_RTHDR的值是否为no
+	DEF_ENABLE_PING6_RTHDR = -DPING6_ENABLE_RTHDR         	#如果不是，则将-DPING6_ENABLE_RTHDR赋给变量DEF_ENABLE_PING6_RTHDR
+ifeq ($(ENABLE_PING6_RTHDR),RFC3542)          	#判断ENABLE_PING6_RTHDR的值是否为RFC3542
+	DEF_ENABLE_PING6_RTHDR += -DPINR6_ENABLE_RTHDR_RFC3542     	#如果是，则将 -DPINR6_ENABLE_RTHDR_RFC3542追加给变量DEF_ENABLE_PING6_R
 endif
 endif
 
@@ -136,13 +136,16 @@ TARGETS=$(IPV4_TARGETS) $(IPV6_TARGETS)
 
 CFLAGS=$(CCOPTOPT) $(CCOPT) $(GLIBCFIX) $(DEFINES)
 LDLIBS=$(LDLIB) $(ADDLIB)
-#编译选项
+                                 #编译选项
 
 UNAME_N:=$(shell uname -n)
+#将命令 uname -n 的输出给变量UNAME_N
 LASTTAG:=$(shell git describe HEAD | sed -e 's/-.*//')
+#以%Y/%m/%d的格式输出年月日。如：20140508， 并保存到TODAY变量中
 TODAY=$(shell date +%Y/%m/%d)
 DATE=$(shell date --date $(TODAY) +%Y%m%d)
 TAG:=$(shell date --date=$(TODAY) +s%Y%m%d)
+#将TODAY的内容赋给TAG，以s%Y%m%d的格式
 
 
 # -------------------------------------
@@ -153,8 +156,10 @@ all: $(TARGETS)
 
 %.s: %.c
 	$(COMPILE.c) $< $(DEF_$(patsubst %.o,%,$@)) -S -o $@
+#将所有的.s文件编译成对应的.o文件	
 %.o: %.c
 	$(COMPILE.c) $< $(DEF_$(patsubst %.o,%,$@)) -o $@
+	#将所有的.o文件编译生成目标所要的可执行文件
 $(TARGETS): %: %.o
 	$(LINK.o) $^ $(LIB_$@) $(LDLIBS) -o $@
 #
@@ -223,6 +228,8 @@ LIB_tftpd =
 
 tftpd: tftpsubs.o
 tftpd.o tftpsubs.o: tftp.h
+#tftpd.o和tftpsubs.o文件依赖tftp.h头文件
+
 
 # -------------------------------------
 # ninfod
@@ -244,7 +251,7 @@ ifeq ($(KERNEL_INCLUDE),)
 	@echo "Please, set correct KERNEL_INCLUDE"; false
 else
 	@set -e; \
-	if [ ! -r $(KERNEL_INCLUDE)/linux/autoconf.h ]; then \
+	if [ ! -r $(KERNEL_INCLUDE)/linux/autoconf.h ]; then \          #如果autoconf.h不是一个可读文件，则报错。
 		echo "Please, set correct KERNEL_INCLUDE"; false; fi
 endif
 
